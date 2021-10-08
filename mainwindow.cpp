@@ -1,67 +1,31 @@
 #include "mainwindow.h"
-#include <cmath>
-#include <iostream>
-#include <QSerialPortInfo>
-#include <QSettings>
-#include <QMessageBox>
+#include "ui_mainwindow.h"
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
-    ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
 {
-    this->setWindowTitle("Mock Monitor");
-
-    // Parameter initialization
-    n_curves = 7; //number of lines
-    sampling_interval_ms = 10; // time
-    n_plot_points = 1000; // number of points
-    plotting_cnt = 0;
-
-    // Plotting points initialization.
-    plot_x = new double[n_plot_points];
-    plot_y = new double*[n_curves];
-    for (int i=0; i<n_curves; i++) {
-        this->plot_y[i] = new double[n_plot_points]();
-    }
-    for (int i=0; i<n_plot_points; i++) {
-        plot_x[i] = (float) i * sampling_interval_ms; // type convert use static_cast<>
-    }
-
-    // UI initialization.
     ui->setupUi(this);
+    QRect rec = QApplication::desktop()->screenGeometry();
+    height = rec.height();
+    width = rec.width();
+    /*QSize size = this->size();
+    height = size.height();
+    width =  size.width();*/
+    //setFixedSize(width, height);
+    setWindowState(Qt::WindowFullScreen);
+    ui->customPlot->setGeometry(20,20,width-0.01*width,height-0.25*height);
+    ui->groupBox->setGeometry(20,height-0.2*height,280,90);
+    ui->groupBox_2->setGeometry(300,height-0.2*height,420,90);
+    ui->horizontalSlider->setGeometry(740,height-0.2*height,420,50);
+    ui->horizontalSlider->setStyleSheet("QSlider::handle:horizontal {background-color:red;}");
+    ui->label_8->setGeometry(900,height-0.18*height,100,20);
+    ui->pushButton_2->setGeometry(20,height-0.10*height,80,21);
+    ui->pushButton_2->setStyleSheet("background-color: red");
+    ui->label_8->setText("0 ms");
+    file.setFileName("Log.txt");
+    file.open(QIODevice::WriteOnly);
 
-    // Curves initialization.
-    QString color_names[] = {"red", "green", "blue", "orange", "purple", "black", "yellow", "white"};
-    curves = new QwtPlotCurve*[n_curves];
-    for (int i=0; i<n_curves; i++) {
-        QColor c(color_names[i]);
-        c.setAlphaF(0.8);
-        curves[i] = new QwtPlotCurve(QString("curve%1").arg(i));
-        curves[i]->setPen(c, 1.5);
-        curves[i]->attach( ui->qwtPlot );
-    }
-
-    // Graph initialization
-    ui->qwtPlot->setAxisTitle(QwtPlot::xBottom, "Yes he's sexy");
-    ui->qwtPlot->setAxisTitle(QwtPlot::yLeft, "Artem sexy boy");
-    ui->qwtPlot->setAxisScale(0, -100, 1000); // Y-axis
-    ui->qwtPlot->setAxisScale(1, 0, sampling_interval_ms * n_plot_points); // X-axis
-    ui->qwtPlot->setCanvasBackground(QColor(Qt::lightGray));
-
-    // Grid initialization.
-    grid1 = new QwtPlotGrid;
-    grid1->setPen(Qt::gray);
-    // grid1->attach(ui->qwtPlot);
-
-    // Marker init
-    marker1 = new QwtPlotMarker;
-    marker1->setLineStyle(QwtPlotMarker::VLine);
-    marker1->setLinePen(QPen(Qt::yellow));
-    marker1->attach(ui->qwtPlot);
-
-    // Replotting timer.
-    timer1 = new QTimer();
-    timer1->start(50);
-    connect(timer1, SIGNAL(timeout()), this, SLOT(redraw()));
 
     // Serial port list.
     QList<QSerialPortInfo> portlist = QSerialPortInfo::availablePorts();
@@ -69,7 +33,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
         QString portname = portlist.at(i).portName();
         portname += ":";
         portname += portlist.at(i).description();
-        ui->comboBox_CommPort->addItem(portname);
+        ui->Port->addItem(portname);
     }
 
     // Serial baudrate list.
@@ -77,12 +41,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     for (int i=0; i<baudlist.size(); i++) {
         qint32 baud_int = baudlist.at(i);
         QString baud_str = QString("%1").arg(baud_int);
-        ui->comboBox_CommBaudrate->addItem(baud_str);
+        ui->Baudrate->addItem(baud_str);
     }
 
     // Serial port settings.
-    serial1 = new QSerialPort();
-    connect(serial1, SIGNAL(readyRead()), this, SLOT(readData()));
+    serial = new QSerialPort();
+    connect(serial, SIGNAL(readyRead()), this, SLOT(readData()));
 
     // Load setting data.
     cfg = new QSettings("config.ini", QSettings::IniFormat);
@@ -90,142 +54,206 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 
     // Load the serial port setting.
     QString portname = cfg->value("Serial/Port", "COM1").toString();
-    int port_idx = ui->comboBox_CommPort->findText(portname);
+    int port_idx = ui->Port->findText(portname);
     if ( port_idx != -1 ) {
-        ui->comboBox_CommPort->setCurrentIndex( port_idx );
+        ui->Port->setCurrentIndex( port_idx );
     }
 
     // Load the current settings.
     QString baudrate = cfg->value("Serial/Baudrate", "9800").toString();
-    int baud_idx = ui->comboBox_CommBaudrate->findText(baudrate);
+    int baud_idx = ui->Baudrate->findText(baudrate);
     if ( baud_idx != -1 ) {
-        ui->comboBox_CommBaudrate->setCurrentIndex(baud_idx);
+        ui->Baudrate->setCurrentIndex(baud_idx);
     }
+
+    ui->customPlot->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
+
+    ui->customPlot->addGraph(); // blue line
+    ui->customPlot->graph(0)->setPen(QPen(QColor(40, 110, 255)));
+    ui->customPlot->addGraph(); // red line
+    ui->customPlot->graph(1)->setPen(QPen(QColor(255, 110, 40)));
+    ui->customPlot->addGraph(); // red line
+    ui->customPlot->graph(2)->setPen(QPen(QColor(125, 250, 140)));
+    ui->customPlot->addGraph(); // red line
+    ui->customPlot->graph(3)->setPen(QPen(QColor(100, 100, 140)));
+    ui->customPlot->addGraph(); // red line
+    ui->customPlot->graph(4)->setPen(QPen(QColor(200, 200, 140)));
+    ui->customPlot->addGraph(); // red line
+    ui->customPlot->graph(5)->setPen(QPen(QColor(30, 250, 140)));
+    ui->customPlot->addGraph(); // red line
+    ui->customPlot->graph(6)->setPen(QPen(QColor(125, 50, 40)));
+
+    QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
+    timeTicker->setTimeFormat("%h:%m:%s");
+    ui->customPlot->xAxis->setTicker(timeTicker);
+    ui->customPlot->axisRect()->setupFullAxesBox();
+    ui->customPlot->yAxis->setRange(-100, 1000);
+
+    // make left and bottom axes transfer their ranges to right and top axes:
+    connect(ui->customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->xAxis2, SLOT(setRange(QCPRange)));
+    connect(ui->customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->yAxis2, SLOT(setRange(QCPRange)));
+
+    // setup a timer that repeatedly calls MainWindow::realtimeDataSlot:
+    connect(dataTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot()));
+    dataTimer->start(0); // Interval 0 means to refresh as fast as possible
+
 }
 
-// Destractor.
 MainWindow::~MainWindow()
 {
-    // Save the current settings.
-    cfg->setValue("Serial/Port", ui->comboBox_CommPort->currentText());
-    cfg->setValue("Serial/Baudrate", ui->comboBox_CommBaudrate->currentText());
-    delete cfg;
-
-    // Delete all allocated resources.
+    file.close();
     delete ui;
-    for (int i=0; i<n_curves; i++)
-        delete curves[i];
-    delete curves;
-    delete timer1;
-
-    delete serial1;
-
-    delete plot_x;
-    for (int i=0; i<n_curves; i++) {
-        delete plot_y[i];
-    }
-    delete plot_y;
 }
 
-// Replot the graph.
-void MainWindow::redraw()
+void MainWindow::realtimeDataSlot()
 {
-    for (int i=0; i<this->n_curves; i++) {
-        curves[i]->setSamples(this->plot_x, this->plot_y[i], n_plot_points);
+    static QTime time(QTime::currentTime());
+    // calculate two new data points:
+    double key = time.elapsed()/1000.0; // time elapsed since start of demo, in seconds
+    static double lastPointKey = 0;
+    if (key-lastPointKey > 0.002) // at most add point every 2 ms
+    {
+      // add data to lines:
+      ui->customPlot->graph(0)->addData(key, y[0] + D[0]);
+      ui->customPlot->graph(1)->addData(key, y[1] + D[1]);
+      ui->customPlot->graph(2)->addData(key, y[2] + D[2]);
+      ui->customPlot->graph(3)->addData(key, y[3] + D[3]);
+      ui->customPlot->graph(4)->addData(key, y[4] + D[4]);
+      ui->customPlot->graph(5)->addData(key, y[5] + D[5]);
+      ui->customPlot->graph(6)->addData(key, y[6] + D[6]);
+      // rescale value (vertical) axis to fit the current data:
+      //ui->customPlot->graph(0)->rescaleValueAxis();
+      //ui->customPlot->graph(1)->rescaleValueAxis(true);
+      lastPointKey = key;
     }
-    qDebug()<<" plott_cnt:"<<plotting_cnt<<endl;
-    marker1->setXValue(plotting_cnt * sampling_interval_ms);
-    ui->qwtPlot->replot();
-}
+    // make key axis range scroll with the data (at a constant range size of 8):
+    ui->customPlot->xAxis->setRange(key, 8, Qt::AlignRight);
+    ui->customPlot->replot();
 
-// Handle received data.
-void MainWindow::readData()
-{
-    serial1_queue += serial1->readAll();
+    // calculate frames per second:
+    static double lastFpsKey;
+    static int frameCount;
+    ++frameCount;
+    if (key-lastFpsKey > 2) // average fps over 2 seconds
+    {
 
-    int j;
-    while ( (j = serial1_queue.indexOf("\r\n")) != -1 ) {
-        // Extraction of the current processing line and eliminate it for next processing.
-        QByteArray line = serial1_queue.mid(0, j);
-        serial1_queue.remove(0, j+2);
-        // A process of current line.
-        QList<QByteArray> elems = line.split(',');
-        int n_elems = elems.length();
-        if ( n_elems != n_curves ) {
-            //  this->ui->textBrowser->setText(line);
-            continue;
-        }
-        for (int i=0; i<n_curves; i++) {
-            double value = (double) elems[i].toDouble();
-            plot_y[i][plotting_cnt] = value;
-        }
-        plotting_cnt = (plotting_cnt + 1) % n_plot_points;
     }
 }
 
-// Handle serial connection mode.
-void MainWindow::on_pushButton_ConnectComm_clicked()
+
+void MainWindow::on_pushButton_clicked()
 {
-    if ( serial1->isOpen() ) {
-        serial1->close();
-        ui->pushButton_ConnectComm->setText("Connect");
+    if (serial->isOpen() ) {
+        serial->close();
+        ui->pushButton->setText("Connect");
         ui->statusbar->showMessage("The port is closed", 1000);
     } else {
         // Set port name from the combo box.
-        QString portname = ui->comboBox_CommPort->currentText();
+        QString portname = ui->Port->currentText();
         int port_sep_idx = portname.indexOf(":");
         portname = portname.left(port_sep_idx);
-        serial1->setPortName(portname);
+        serial->setPortName(portname);
         // Set baudrate from the combo box.
-        qint32 baudrate = ui->comboBox_CommBaudrate->currentText().toInt();
-        serial1->setBaudRate(baudrate);
+        qint32 baudrate = ui->Baudrate->currentText().toInt();
+        serial->setBaudRate(baudrate);
         // Reset the starting line.
-        plotting_cnt = 0;
 
-        if ( serial1->open(QIODevice::ReadWrite) == false ) { // Failed to open the port.
+        if (serial->open(QIODevice::ReadWrite) == false ) { // Failed to open the port.
             ui->statusbar->showMessage("Failed to open COM port", 1000);
         } else {
-            ui->pushButton_ConnectComm->setText("Disconnect");
+            ui->pushButton->setText("Disconnect");
             ui->statusbar->showMessage("The port is opened.", 1000);
         }
     }
 }
 
-// Clear the plotting data.
-void MainWindow::on_pushButton_Clear_clicked()
+
+void MainWindow::readData()
 {
-    for (int i=0; i<n_plot_points; i++) {
-        for (int j=0; j<n_curves; j++) {
-            this->plot_y[j][i] = 0.0;
+    serial_queue += serial->readAll();
+    QTextStream out(&file);
+
+    int j;
+    while ( (j = serial_queue.indexOf("\r\n")) != -1 ) {
+        cd = QDate::currentDate();
+        ct = QTime::currentTime();
+        out<<cd.toString("yyyy-MM-dd");
+        out<<" ";
+        out<<ct.toString("hh:mm:ss.zzz");
+        out<<" ";
+        out<<serial_queue;
+        out<<"\r\n";
+        // Extraction of the current processing line and eliminate it for next processing.
+        QByteArray line = serial_queue.mid(0, j);
+        serial_queue.remove(0, j+2);
+        // A process of current line.
+        QList<QByteArray> elems = line.split(',');
+        int n_elems = elems.length();
+
+        for (int i=0; i < n_elems; i++) {
+           // qDebug()<<"n_curves"<<i<<endl;
+           double value = (double) elems[i].toDouble();
+           y[i]=value;
+           qDebug()<< value <<endl;
         }
+
     }
-    plotting_cnt = 0;
+
 }
 
-void MainWindow::on_pushButton_Grid_clicked()
+void MainWindow::on_lineEdit_textChanged(const QString &arg1)
 {
-    if ( grid1->plot() == 0 ) { // Not attached yet.
-        grid1->attach(ui->qwtPlot);
-        ui->pushButton_Grid->setText("Grid Off");
-    } else {
-        grid1->detach();
-        ui->pushButton_Grid->setText("Grid On");
-    }
+    D[0] = arg1.toFloat();
 }
 
-void MainWindow::on_pushButton_device_transmit_clicked()
+
+void MainWindow::on_lineEdit_2_textChanged(const QString &arg1)
 {
-    if ( serial1->isOpen() == false ) {
-        ui->statusbar->showMessage("Port isn't opened.", 1000);
-        return;
-    }
-
-    QString mode = ui->comboBox_device_mode->currentText();
-    if ( mode == "Reset" )  serial1->sendBreak();
-    else if ( mode == "Command") {
-        QString cmd = ui->plainTextEdit_device_command->toPlainText();
-        serial1->write( cmd.toStdString().c_str() );
-    } else {
-        ui->statusbar->showMessage("Unknown command was selected.", 1000);
-    }
+    D[1] = arg1.toFloat();
 }
+
+
+void MainWindow::on_lineEdit_3_textChanged(const QString &arg1)
+{
+    D[2] = arg1.toFloat();
+}
+
+
+void MainWindow::on_lineEdit_4_textChanged(const QString &arg1)
+{
+    D[3] = arg1.toFloat();
+}
+
+
+void MainWindow::on_lineEdit_5_textChanged(const QString &arg1)
+{
+    D[4] = arg1.toFloat();
+}
+
+
+void MainWindow::on_lineEdit_6_textChanged(const QString &arg1)
+{
+    D[5] = arg1.toFloat();
+}
+
+
+
+void MainWindow::on_lineEdit_7_textChanged(const QString &arg1)
+{
+    D[6] = arg1.toFloat();
+}
+
+
+void MainWindow::on_horizontalSlider_valueChanged(int value)
+{
+    ui->label_8->setText(QString::number(value)+" ms");
+    dataTimer->start(value);
+}
+
+
+
+void MainWindow::on_pushButton_2_clicked()
+{
+    close();
+}
+
