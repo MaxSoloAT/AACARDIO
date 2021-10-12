@@ -33,9 +33,14 @@ private:
     QSerialPort *serial;
     QByteArray serial_queue;
     QSettings *cfg;
+    //add this
+    long int key=0;
+    void getPortList();
+    void getBaubrate();
 
 public slots:
     void realtimeDataSlot();
+
 private slots:
     void on_pushButton_clicked();
     void readData();
