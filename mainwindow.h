@@ -23,8 +23,10 @@ public:
     float height;
     float width;
     QFile file;
+    QTextStream out;
     QDate cd;
     QTime ct;
+
 
 private:
     Ui::MainWindow *ui;
@@ -33,10 +35,12 @@ private:
     QSerialPort *serial;
     QByteArray serial_queue;
     QSettings *cfg;
+    QCPItemStraightLine *infLine;
     //add this
     long int key=0;
     void getPortList();
     void getBaubrate();
+    void setFile();
 
 public slots:
     void realtimeDataSlot();
@@ -53,5 +57,6 @@ private slots:
     void on_lineEdit_7_textChanged(const QString &arg1);
     void on_horizontalSlider_valueChanged(int value);
     void on_pushButton_2_clicked();
+    void clickedGraph(QMouseEvent *event);
 };
 #endif // MAINWINDOW_H

@@ -6,7 +6,9 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    QPixmap icon(":/icons/icons/main_i.png");
+    QIcon icon_i(icon);
+    setWindowIcon(icon_i);
     //some app geometry
     QRect rec = QApplication::desktop()->screenGeometry();
     height = rec.height();
@@ -31,7 +33,7 @@ MainWindow::MainWindow(QWidget *parent)
     //work with file
     file.setFileName("Log.txt");
     file.open(QIODevice::WriteOnly);
-
+    out.setDevice(&file);
     getPortList();
     getBaubrate();
 
@@ -61,9 +63,13 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     //ui->customPlot->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
-    //ui->customPlot->setOpenGl(true);
+    ui->customPlot->setOpenGl(true,4);
+    ui->customPlot->legend->setVisible(true);
+    //ui->customPlot->legend->setp
+    ui->customPlot->legend->setFont(QFont("Helvetica",9));
 
-    int l = 1;
+
+    int l = 2;
     QColor col1(0, 0, 255);
     QPalette palette1;
     ui->customPlot->addGraph(); // blue line
@@ -73,6 +79,7 @@ MainWindow::MainWindow(QWidget *parent)
     palette1.setColor(QPalette::Text, Qt::white);
     ui->lineEdit->setPalette(palette1);
     ui->lineEdit->setText("0");
+    ui->customPlot->graph(0)->setName("Acceleration");
 
     QColor col2(50, 0, 0);
     QPalette palette2;
@@ -82,6 +89,7 @@ MainWindow::MainWindow(QWidget *parent)
     palette2.setColor(QPalette::Text, Qt::white);
     ui->lineEdit_2->setPalette(palette2);
     ui->lineEdit_2->setText("0");
+    ui->customPlot->graph(1)->setName("Breath");
 
     QColor col3(0, 0, 0);
     QPalette palette3;
@@ -91,6 +99,7 @@ MainWindow::MainWindow(QWidget *parent)
     palette3.setColor(QPalette::Text, Qt::white);
     ui->lineEdit_3->setPalette(palette3);
     ui->lineEdit_3->setText("0");
+    ui->customPlot->graph(2)->setName("GSR");
 
     QColor col4(140, 0, 0);
     QPalette palette4;
@@ -100,6 +109,7 @@ MainWindow::MainWindow(QWidget *parent)
     palette4.setColor(QPalette::Text, Qt::white);
     ui->lineEdit_4->setPalette(palette4);
     ui->lineEdit_4->setText("0");
+    ui->customPlot->graph(3)->setName("Pulse");
 
     QColor col5(180, 180, 84);
     QPalette palette5;
@@ -109,6 +119,7 @@ MainWindow::MainWindow(QWidget *parent)
     palette5.setColor(QPalette::Text, Qt::white);
     ui->lineEdit_5->setPalette(palette5);
     ui->lineEdit_5->setText("0");
+    ui->customPlot->graph(4)->setName("--");
 
     QColor col6(200, 20, 150);
     QPalette palette6;
@@ -118,6 +129,7 @@ MainWindow::MainWindow(QWidget *parent)
     palette6.setColor(QPalette::Text, Qt::white);
     ui->lineEdit_6->setPalette(palette6);
     ui->lineEdit_6->setText("0");
+    ui->customPlot->graph(5)->setName("---");
 
 
     QColor col7(125, 150, 140);
@@ -128,6 +140,7 @@ MainWindow::MainWindow(QWidget *parent)
     palette7.setColor(QPalette::Text, Qt::white);
     ui->lineEdit_7->setPalette(palette7);
     ui->lineEdit_7->setText("0");
+     ui->customPlot->graph(6)->setName("----");
 
     ui->customPlot->setInteractions(QCP::iRangeDrag|QCP::iRangeZoom);
    // QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
@@ -146,6 +159,7 @@ MainWindow::MainWindow(QWidget *parent)
     //connect(dataTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot2()));
    // dataTimer->start(1000); // Interval 0 means to refresh as fast as possible
     //ui->customPlot->setNoAntialiasingOnDrag(true);
+    connect(ui->customPlot, SIGNAL(mousePress(QMouseEvent*)), SLOT(clickedGraph(QMouseEvent*)));
 }
 
 MainWindow::~MainWindow()
@@ -180,15 +194,20 @@ void MainWindow::getBaubrate()
     }
 }
 
+void MainWindow::setFile()
+{
+    //(&file)
+}
+
 
 void MainWindow::realtimeDataSlot()
 {
-   static QTime time(QTime::currentTime());
+  // static QTime time(QTime::currentTime());
     //calculate two new data points:
-    double key = time.elapsed()/1000.0; // time elapsed since start of demo, in seconds
-   static double lastPointKey = 0;
-    if (key-lastPointKey > 0.002) // at most add point every 2 ms
-    {
+    //double key = time.elapsed()/1000.0; // time elapsed since start of demo, in seconds
+ //  static double lastPointKey = 0;
+  //  if (key-lastPointKey > 0.002) // at most add point every 2 ms
+  //  {
       // add data to lines:
       /*  ui->customPlot->graph(0)->addData(key, y[0] + D[0]);
         ui->customPlot->graph(1)->addData(key, y[1] + D[1]);
@@ -197,16 +216,16 @@ void MainWindow::realtimeDataSlot()
         ui->customPlot->graph(4)->addData(key, y[4] + D[4]);
         ui->customPlot->graph(5)->addData(key, y[5] + D[5]);
         ui->customPlot->graph(6)->addData(key, y[6] + D[6]);*/
-       ui->customPlot->graph(0)->addData(key, qSin(key)+qrand()/(double)RAND_MAX*1*qSin(key/0.3843));
-       ui->customPlot->graph(1)->addData(key, qCos(key)+qrand()/(double)RAND_MAX*5*qSin(key/0.4364));
-        lastPointKey = key;
-    }
+    //   ui->customPlot->graph(0)->addData(key, qSin(key)+qrand()/(double)RAND_MAX*1*qSin(key/0.3843));
+     //  ui->customPlot->graph(1)->addData(key, qCos(key)+qrand()/(double)RAND_MAX*5*qSin(key/0.4364));
+       // lastPointKey = key;
+  //  }
     // rescale value (vertical) axis to fit the current data:
     //ui->customPlot->graph(0)->rescaleValueAxis();
     //ui->customPlot->graph(1)->rescaleValueAxis(true);
     // make key axis range scroll with the data (at a constant range size of 8):
-    ui->customPlot->xAxis->setRange(key, 60, Qt::AlignRight);
-    ui->customPlot->replot();
+  //  ui->customPlot->xAxis->setRange(key, 60, Qt::AlignRight);
+   // ui->customPlot->replot();
 
 }
 
@@ -242,7 +261,7 @@ void MainWindow::readData()
 {
 
     serial_queue += serial->readAll();
-    QTextStream out(&file);
+
 
     int j;
     while ( (j = serial_queue.indexOf("\r\n")) != -1 ) {
@@ -251,7 +270,7 @@ void MainWindow::readData()
         out<<cd.toString("yyyy-MM-dd");
         out<<" ";
         out<<ct.toString("hh:mm:ss.zzz");
-        out<<" ";
+        out<<" "<<key<<" "; //something wrong bellow works file
         out<<serial_queue;
         out<<"\r\n";
 
@@ -267,19 +286,23 @@ void MainWindow::readData()
             y[i] = value;
            // qDebug()<< value <<endl;
         }
+        ui->label_9->setText(QString::number(y[3]));
+       // static int key = 0;
+        ui->customPlot->graph(0)->addData(key, y[0] + D[0]);
+        ui->customPlot->graph(1)->addData(key, y[1] + D[1]);
+        ui->customPlot->graph(2)->addData(key, y[2] + D[2]);
+        ui->customPlot->graph(3)->addData(key, y[3] + D[3]);
+        ui->customPlot->graph(4)->addData(key, y[4] + D[4]);
+        ui->customPlot->graph(5)->addData(key, y[5] + D[5]);
+        ui->customPlot->xAxis->setRange(key, 2500, Qt::AlignRight);
+        ui->customPlot->replot();
 
-    }
-    ui->label_9->setText(QString::number(y[3]));
-    static int key = 0;
-    ui->customPlot->graph(0)->addData(key, y[0] + D[0]);
-    ui->customPlot->graph(1)->addData(key, y[1] + D[1]);
-    ui->customPlot->graph(2)->addData(key, y[2] + D[2]);
-    ui->customPlot->graph(3)->addData(key, y[3] + D[3]);
-    ui->customPlot->graph(4)->addData(key, y[4] + D[4]);
-    ui->customPlot->graph(5)->addData(key, y[5] + D[5]);
-    ui->customPlot->xAxis->setRange(key, 2500, Qt::AlignRight);
-    ui->customPlot->replot();
+        qDebug()<<key<<endl;
+        //todo line for kiril get key and print in file
     key++;
+    }
+
+
 }
 
 void MainWindow::on_lineEdit_textChanged(const QString &arg1)
@@ -336,5 +359,24 @@ void MainWindow::on_horizontalSlider_valueChanged(int value)
 void MainWindow::on_pushButton_2_clicked()
 {
     close();
+}
+
+void MainWindow::clickedGraph(QMouseEvent *event)
+{   if(event->buttons() & Qt::RightButton)
+    {
+        //do stuff
+        QPoint point = event->pos();
+        qDebug()<<ui->customPlot->xAxis->pixelToCoord(point.x())<<endl;
+        qDebug()<<ui->customPlot->yAxis->pixelToCoord(point.y())<<endl;
+        infLine = new QCPItemStraightLine(ui->customPlot);
+        infLine->point1->setCoords(ui->customPlot->xAxis->pixelToCoord(point.x()),ui->customPlot->yAxis->pixelToCoord(point.y()));
+        infLine->point2->setCoords(ui->customPlot->xAxis->pixelToCoord(point.x()),ui->customPlot->yAxis->pixelToCoord(point.y())+500);
+       out<<"label: "<<ui->customPlot->xAxis->pixelToCoord(point.x())<<"\r\n"<<endl;
+
+
+    }
+
+    //infLine->point1->setCoords(2, 0);
+
 }
 
