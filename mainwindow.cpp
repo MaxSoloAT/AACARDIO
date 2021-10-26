@@ -13,12 +13,8 @@ MainWindow::MainWindow(QWidget *parent)
     QRect rec = QApplication::desktop()->screenGeometry();
     height = rec.height();
     width = rec.width();
-    /*QSize size = this->size();
-    height = size.height();
-    width =  size.width();*/
-    //setFixedSize(width, height);
-    setWindowState(Qt::WindowFullScreen);
-    ui->customPlot->setGeometry(20,20,width-0.01*width,height-0.25*height);
+    //setWindowState(Qt::WindowFullScreen);
+    /*ui->customPlot->setGeometry(20,20,width-0.01*width,height-0.25*height);
     ui->groupBox->setGeometry(20,height-0.2*height,280,90);
     ui->groupBox_2->setGeometry(300,height-0.2*height,420,90);
     ui->horizontalSlider->setGeometry(740,height-0.2*height,420,50);
@@ -28,17 +24,42 @@ MainWindow::MainWindow(QWidget *parent)
     ui->pushButton_2->setStyleSheet("background-color: red");
     ui->label_8->setText("0 ms");
     ui->label_9->setText("pulse");
-    ui->label_9->setGeometry(1000,height-0.08*height, 80,25);
+    ui->label_9->setGeometry(1000,height-0.08*height, 80,25);*/
+
+/* adding tabs!!
+    mainTab = new MainTab;
+    tabWidget = new QTabWidget(this);
+    tabWidget->addTab(mainTab,tr("first"));
+    tabWidget->addTab(new QWidget(this),tr("second"));
+    //tabWidget->setGeometry(100,100,width-200,height-100);*/
+
+
+    //initSettingGraph(ui->groupBox->)
+    //
+    gn1 = "vibration";
+    gn2 = "breath";
+    gn3 = "kgr";
+    gn4 = "pulse";
+    gn5 = "nan";
+    gn6 = "nan";
+    gn7 = "nan";
+
+    initSettingGraph(ui->graph_1_name, ui->graph_1_number, ui->graph_1_line_min, ui->graph_1_line_max, gn1);
+    initSettingGraph(ui->graph_2_name, ui->graph_2_number, ui->graph_2_line_min, ui->graph_2_line_max, gn2);
+    initSettingGraph(ui->graph_3_name, ui->graph_3_number, ui->graph_3_line_min, ui->graph_3_line_max, gn3);
+    initSettingGraph(ui->graph_4_name, ui->graph_4_number, ui->graph_4_line_min, ui->graph_4_line_max, gn4);
+    initSettingGraph(ui->graph_5_name, ui->graph_5_number, ui->graph_5_line_min, ui->graph_5_line_max, gn5);
+    initSettingGraph(ui->graph_6_name, ui->graph_6_number, ui->graph_6_line_min, ui->graph_6_line_max, gn6);
+    initSettingGraph(ui->graph_7_name, ui->graph_7_number, ui->graph_7_line_min, ui->graph_7_line_max, gn7);
+
 
     //work with file
+
     file.setFileName("Log.txt");
     file.open(QIODevice::WriteOnly);
     out.setDevice(&file);
     getPortList();
-    getBaubrate();
-
-
-
+    getBaudrate();
 
     // Serial port settings.
     serial = new QSerialPort();
@@ -62,10 +83,8 @@ MainWindow::MainWindow(QWidget *parent)
         ui->Baudrate->setCurrentIndex(baud_idx);
     }
 
-    //ui->customPlot->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
-    ui->customPlot->setOpenGl(true,4);
+    ui->customPlot->setOpenGl(true,16);
     ui->customPlot->legend->setVisible(true);
-    //ui->customPlot->legend->setp
     ui->customPlot->legend->setFont(QFont("Helvetica",9));
 
 
@@ -77,8 +96,7 @@ MainWindow::MainWindow(QWidget *parent)
     //ui->customPlot->graph(0)->setScatterStyle(QCPScatterStyle::ssCross);
     palette1.setColor(QPalette::Base, col1);
     palette1.setColor(QPalette::Text, Qt::white);
-    ui->lineEdit->setPalette(palette1);
-    ui->lineEdit->setText("0");
+    initSettingSlider(col1, ui->graph_1_slider);
     ui->customPlot->graph(0)->setName("Acceleration");
 
     QColor col2(50, 0, 0);
@@ -87,8 +105,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->customPlot->graph(1)->setPen(QPen(col2,l)); // breath brown
     palette2.setColor(QPalette::Base, col2);
     palette2.setColor(QPalette::Text, Qt::white);
-    ui->lineEdit_2->setPalette(palette2);
-    ui->lineEdit_2->setText("0");
+    initSettingSlider(col2, ui->graph_2_slider);
     ui->customPlot->graph(1)->setName("Breath");
 
     QColor col3(0, 0, 0);
@@ -97,8 +114,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->customPlot->graph(2)->setPen(QPen(col3,l));// kgr black
     palette3.setColor(QPalette::Base, col3);
     palette3.setColor(QPalette::Text, Qt::white);
-    ui->lineEdit_3->setPalette(palette3);
-    ui->lineEdit_3->setText("0");
+    initSettingSlider(col3, ui->graph_3_slider);
     ui->customPlot->graph(2)->setName("GSR");
 
     QColor col4(140, 0, 0);
@@ -107,8 +123,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->customPlot->graph(3)->setPen(QPen(col4,l)); // pulse dark red
     palette4.setColor(QPalette::Base, col4);
     palette4.setColor(QPalette::Text, Qt::white);
-    ui->lineEdit_4->setPalette(palette4);
-    ui->lineEdit_4->setText("0");
+    initSettingSlider(col4, ui->graph_4_slider);
     ui->customPlot->graph(3)->setName("Pulse");
 
     QColor col5(180, 180, 84);
@@ -117,8 +132,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->customPlot->graph(4)->setPen(QPen(col5,l)); // random dark
     palette5.setColor(QPalette::Base, col5);
     palette5.setColor(QPalette::Text, Qt::white);
-    ui->lineEdit_5->setPalette(palette5);
-    ui->lineEdit_5->setText("0");
+    initSettingSlider(col5, ui->graph_5_slider);
     ui->customPlot->graph(4)->setName("--");
 
     QColor col6(200, 20, 150);
@@ -127,8 +141,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->customPlot->graph(5)->setPen(QPen(col6,l)); //
     palette6.setColor(QPalette::Base, col6);
     palette6.setColor(QPalette::Text, Qt::white);
-    ui->lineEdit_6->setPalette(palette6);
-    ui->lineEdit_6->setText("0");
+    initSettingSlider(col6, ui->graph_6_slider);
     ui->customPlot->graph(5)->setName("---");
 
 
@@ -138,29 +151,24 @@ MainWindow::MainWindow(QWidget *parent)
     QPalette palette7;
     palette7.setColor(QPalette::Base, col7);
     palette7.setColor(QPalette::Text, Qt::white);
-    ui->lineEdit_7->setPalette(palette7);
-    ui->lineEdit_7->setText("0");
-     ui->customPlot->graph(6)->setName("----");
+    initSettingSlider(col7, ui->graph_7_slider);
+    ui->customPlot->graph(6)->setName("----");
 
     ui->customPlot->setInteractions(QCP::iRangeDrag|QCP::iRangeZoom);
-   // QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
-   // timeTicker->setTimeFormat("%h:%m:%s");
+    // QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
+    // timeTicker->setTimeFormat("%h:%m:%s");
     //ui->customPlot->xAxis->setTicker(timeTicker);
 
     ui->customPlot->axisRect()->setupFullAxesBox();
     ui->customPlot->yAxis->setRange(-10, 5000);
-
+   // ui->customPlot->hide();
     // make left and bottom axes transfer their ranges to right and top axes:
     connect(ui->customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->xAxis2, SLOT(setRange(QCPRange)));
     connect(ui->customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->yAxis2, SLOT(setRange(QCPRange)));
-    // connect(this, SIGNAL(readData()), this, SLOT(realtimeDataSlot()));
-    //ALOOOOOOOOOOO
-    // setup a timer that repeatedly calls MainWindow::realtimeDataSlot:
-    //connect(dataTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot2()));
-   // dataTimer->start(1000); // Interval 0 means to refresh as fast as possible
-    //ui->customPlot->setNoAntialiasingOnDrag(true);
+
     connect(ui->customPlot, SIGNAL(mousePress(QMouseEvent*)), SLOT(clickedGraph(QMouseEvent*)));
 }
+
 
 MainWindow::~MainWindow()
 {
@@ -183,7 +191,8 @@ void MainWindow::getPortList()
     }
 }
 
-void MainWindow::getBaubrate()
+
+void MainWindow::getBaudrate()
 {
     // Serial baudrate list.
     QList<qint32> baudlist = QSerialPortInfo::standardBaudRates();
@@ -194,9 +203,21 @@ void MainWindow::getBaubrate()
     }
 }
 
-void MainWindow::setFile()
+void MainWindow::initSettingGraph(QLabel *graph_name, QLabel *graph_number, QLineEdit *min, QLineEdit *max, QString gn)
 {
-    //(&file)
+    graph_name->setText(gn);
+    min->setText("0");
+    max->setText("100");
+    graph_number->setText("0");
+
+}
+
+void MainWindow::initSettingSlider(QColor col, QSlider *slider)
+{
+    QPalette palette = slider->palette();
+    palette.setColor(QPalette::Button,col);
+    slider->setAutoFillBackground(true);
+    slider->setPalette(palette);
 }
 
 
@@ -259,12 +280,12 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::readData()
 {
-
     serial_queue += serial->readAll();
-
-
     int j;
-    while ( (j = serial_queue.indexOf("\r\n")) != -1 ) {
+    long int first;
+    QString second;
+    long int third;
+    while ( (j = serial_queue.indexOf("\r\n")) != -1 ) { //need to fix it requers to new data structures
         cd = QDate::currentDate();
         ct = QTime::currentTime();
         out<<cd.toString("yyyy-MM-dd");
@@ -277,17 +298,59 @@ void MainWindow::readData()
         // Extraction of the current processing line and eliminate it for next processing.
         QByteArray line = serial_queue.mid(0, j);
         serial_queue.remove(0, j+2);
-        // A process of current line.
-        QList<QByteArray> elems = line.split(',');
+        QList<QByteArray> elems = line.split('~');
+        //ui->textEdit->setText(line);
+        ui->textEdit->append(line);
         int n_elems = elems.length();
 
         for (int i=0; i < n_elems; i++) {
-            double value = (double) elems[i].toDouble();
-            y[i] = value;
-           // qDebug()<< value <<endl;
+            first = elems[0].toInt();
+            second = elems[1];
+            third = elems[2].toInt();
+
+
+            //double value = (double) elems[i].toDouble();
+            //y[i] = value;
         }
+/*
+        //qDebug()<<"for end"<<endl;
+        if(second == "v"){
+            ui->customPlot->graph(0)->addData(first, third + D[0]);
+            qDebug()<<first<<" VVVVV "<<second<<" "<<third<<endl;
+            ui->customPlot->xAxis->setRange(first, 2500, Qt::AlignRight);
+            ui->customPlot->replot();
+        }
+        if(second == "c"){
+            qDebug()<<first<<" CCCCC "<<second<<" "<<third<<endl;
+            ui->customPlot->graph(1)->addData(first, third + D[1]);
+            ui->customPlot->xAxis->setRange(first, 2500, Qt::AlignRight);
+            ui->customPlot->replot();
+        }
+        if(second == "g"){
+            qDebug()<<first<<" HHHHH "<<second<<" "<<third<<endl;
+            ui->customPlot->graph(2)->addData(first, third + D[2]);
+            ui->customPlot->xAxis->setRange(first, 2500, Qt::AlignRight);
+            ui->customPlot->replot();
+        }
+        if(second == "p"){
+            qDebug()<<first<<" NNNN "<<second<<" "<<third<<endl;
+            ui->customPlot->graph(3)->addData(first, third + D[3]);
+            ui->customPlot->xAxis->setRange(first, 2500, Qt::AlignRight);
+            ui->customPlot->replot();
+        }
+        if(second == "h"){
+            qDebug()<<first<<" NNNN "<<second<<" "<<third<<endl;
+            ui->customPlot->graph(4)->addData(first, third + D[4]);
+            ui->customPlot->xAxis->setRange(first, 2500, Qt::AlignRight);
+            ui->customPlot->replot();
+        }
+*/
+        //ui->customPlot->graph(4)->addData(key, y[4] + D[4]);
+        //ui->customPlot->graph(5)->addData(key, y[5] + D[5]);
+       // ui->customPlot->replot();
+
+        /*
         ui->label_9->setText(QString::number(y[3]));
-       // static int key = 0;
         ui->customPlot->graph(0)->addData(key, y[0] + D[0]);
         ui->customPlot->graph(1)->addData(key, y[1] + D[1]);
         ui->customPlot->graph(2)->addData(key, y[2] + D[2]);
@@ -296,55 +359,39 @@ void MainWindow::readData()
         ui->customPlot->graph(5)->addData(key, y[5] + D[5]);
         ui->customPlot->xAxis->setRange(key, 2500, Qt::AlignRight);
         ui->customPlot->replot();
-
         qDebug()<<key<<endl;
-        //todo line for kiril get key and print in file
-    key++;
+        key++;*/
     }
-
-
-}
-
-void MainWindow::on_lineEdit_textChanged(const QString &arg1)
-{
-    D[0] = arg1.toFloat();
-}
-
-
-void MainWindow::on_lineEdit_2_textChanged(const QString &arg1)
-{
-    D[1] = arg1.toFloat();
-}
-
-
-void MainWindow::on_lineEdit_3_textChanged(const QString &arg1)
-{
-    D[2] = arg1.toFloat();
-}
-
-
-void MainWindow::on_lineEdit_4_textChanged(const QString &arg1)
-{
-    D[3] = arg1.toFloat();
-}
-
-
-void MainWindow::on_lineEdit_5_textChanged(const QString &arg1)
-{
-    D[4] = arg1.toFloat();
-}
-
-
-void MainWindow::on_lineEdit_6_textChanged(const QString &arg1)
-{
-    D[5] = arg1.toFloat();
-}
-
-
-
-void MainWindow::on_lineEdit_7_textChanged(const QString &arg1)
-{
-    D[6] = arg1.toFloat();
+    if(second == "v"){
+        ui->customPlot->graph(0)->addData(first, third + D[0]);
+        //qDebug()<<first<<" VVVVV "<<second<<" "<<third<<endl;
+        ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);
+        ui->customPlot->replot();
+    }
+    if(second == "c"){
+        //qDebug()<<first<<" CCCCC "<<second<<" "<<third<<endl;
+        ui->customPlot->graph(1)->addData(first, third + D[1]);
+        ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);
+        ui->customPlot->replot();
+    }
+    if(second == "g"){
+        //qDebug()<<first<<" HHHHH "<<second<<" "<<third<<endl;
+        ui->customPlot->graph(2)->addData(first, third + D[2]);
+        ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);
+        ui->customPlot->replot();
+    }
+    if(second == "p"){
+      //  qDebug()<<first<<" PPPP "<<second<<" "<<third<<endl;
+        ui->customPlot->graph(3)->addData(first, third + D[3]);
+        ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);
+        ui->customPlot->replot();
+    }
+    if(second == "h"){
+       // qDebug()<<first<<" HHHH "<<second<<" "<<third<<endl;
+        ui->customPlot->graph(4)->addData(first, third + D[4]);
+        ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);
+        ui->customPlot->replot();
+    }
 }
 
 
@@ -355,28 +402,169 @@ void MainWindow::on_horizontalSlider_valueChanged(int value)
 }
 
 
-
 void MainWindow::on_pushButton_2_clicked()
 {
     close();
 }
 
+
 void MainWindow::clickedGraph(QMouseEvent *event)
 {   if(event->buttons() & Qt::RightButton)
     {
-        //do stuff
         QPoint point = event->pos();
         qDebug()<<ui->customPlot->xAxis->pixelToCoord(point.x())<<endl;
         qDebug()<<ui->customPlot->yAxis->pixelToCoord(point.y())<<endl;
         infLine = new QCPItemStraightLine(ui->customPlot);
         infLine->point1->setCoords(ui->customPlot->xAxis->pixelToCoord(point.x()),ui->customPlot->yAxis->pixelToCoord(point.y()));
         infLine->point2->setCoords(ui->customPlot->xAxis->pixelToCoord(point.x()),ui->customPlot->yAxis->pixelToCoord(point.y())+500);
-       out<<"label: "<<ui->customPlot->xAxis->pixelToCoord(point.x())<<"\r\n"<<endl;
-
-
+        out<<"label: "<<ui->customPlot->xAxis->pixelToCoord(point.x())<<"\r\n"<<endl;
     }
+}
 
-    //infLine->point1->setCoords(2, 0);
 
+void MainWindow::on_graph_1_slider_valueChanged(int value)
+{
+    ui->graph_1_number->setText(QString::number(value));
+    D[0] = value;
+}
+
+
+void MainWindow::on_graph_2_slider_valueChanged(int value)
+{
+     ui->graph_2_number->setText(QString::number(value));
+     D[1] = value;
+}
+
+
+void MainWindow::on_graph_3_slider_valueChanged(int value)
+{
+    ui->graph_3_number->setText(QString::number(value));
+    D[2] = value;
+}
+
+
+void MainWindow::on_graph_4_slider_valueChanged(int value)
+{
+    ui->graph_4_number->setText(QString::number(value));
+    D[3] = value;
+}
+
+
+void MainWindow::on_graph_5_slider_valueChanged(int value)
+{
+    ui->graph_5_number->setText(QString::number(value));
+    D[4] = value;
+}
+
+
+void MainWindow::on_graph_6_slider_valueChanged(int value)
+{
+    ui->graph_6_number->setText(QString::number(value));
+    D[5] = value;
+}
+
+
+void MainWindow::on_graph_7_slider_valueChanged(int value)
+{
+    ui->graph_7_number->setText(QString::number(value));
+    D[6] = value;
+}
+
+
+void MainWindow::on_graph_1_line_min_textChanged(const QString &arg1)
+{
+    ui->graph_1_slider->setMinimum(arg1.toInt());
+    ui->graph_1_slider->setValue(ui->graph_1_slider->value());
+}
+
+
+void MainWindow::on_graph_1_line_max_textChanged(const QString &arg1)
+{
+    ui->graph_1_slider->setMaximum(arg1.toInt());
+    ui->graph_1_slider->setValue(ui->graph_1_slider->value());
+}
+
+
+void MainWindow::on_graph_2_line_min_textChanged(const QString &arg1)
+{
+    ui->graph_2_slider->setMinimum(arg1.toInt());
+    ui->graph_2_slider->setValue(ui->graph_2_slider->value());
+}
+
+
+void MainWindow::on_graph_2_line_max_textChanged(const QString &arg1)
+{
+    ui->graph_2_slider->setMaximum(arg1.toInt());
+    ui->graph_2_slider->setValue(ui->graph_2_slider->value());
+}
+
+
+void MainWindow::on_graph_3_line_min_textChanged(const QString &arg1)
+{
+    ui->graph_3_slider->setMinimum(arg1.toInt());
+    ui->graph_3_slider->setValue(ui->graph_3_slider->value());
+}
+
+
+void MainWindow::on_graph_3_line_max_textChanged(const QString &arg1)
+{
+    ui->graph_3_slider->setMaximum(arg1.toInt());
+    ui->graph_3_slider->setValue(ui->graph_3_slider->value());
+}
+
+
+void MainWindow::on_graph_4_line_min_textChanged(const QString &arg1)
+{
+    ui->graph_4_slider->setMinimum(arg1.toInt());
+    ui->graph_4_slider->setValue(ui->graph_4_slider->value());
+}
+
+
+void MainWindow::on_graph_4_line_max_textChanged(const QString &arg1)
+{
+    ui->graph_4_slider->setMaximum(arg1.toInt());
+    ui->graph_4_slider->setValue(ui->graph_4_slider->value());
+}
+
+
+void MainWindow::on_graph_5_line_min_textChanged(const QString &arg1)
+{
+    ui->graph_5_slider->setMinimum(arg1.toInt());
+    ui->graph_5_slider->setValue(ui->graph_5_slider->value());
+}
+
+
+void MainWindow::on_graph_5_line_max_textChanged(const QString &arg1)
+{
+    ui->graph_5_slider->setMaximum(arg1.toInt());
+    ui->graph_5_slider->setValue(ui->graph_5_slider->value());
+}
+
+
+void MainWindow::on_graph_6_line_min_textChanged(const QString &arg1)
+{
+    ui->graph_6_slider->setMinimum(arg1.toInt());
+    ui->graph_6_slider->setValue(ui->graph_6_slider->value());
+}
+
+
+void MainWindow::on_graph_6_line_max_textChanged(const QString &arg1)
+{
+    ui->graph_6_slider->setMaximum(arg1.toInt());
+    ui->graph_6_slider->setValue(ui->graph_6_slider->value());
+}
+
+
+void MainWindow::on_graph_7_line_min_textChanged(const QString &arg1)
+{
+    ui->graph_7_slider->setMinimum(arg1.toInt());
+    ui->graph_7_slider->setValue(ui->graph_7_slider->value());
+}
+
+
+void MainWindow::on_graph_7_line_max_textChanged(const QString &arg1)
+{
+    ui->graph_7_slider->setMaximum(arg1.toInt());
+    ui->graph_7_slider->setValue(ui->graph_7_slider->value());
 }
 
