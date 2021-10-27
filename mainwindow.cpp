@@ -361,37 +361,39 @@ void MainWindow::readData()
         ui->customPlot->replot();
         qDebug()<<key<<endl;
         key++;*/
-    }
+    //}
     if(second == "v"){
         ui->customPlot->graph(0)->addData(first, third + D[0]);
         //qDebug()<<first<<" VVVVV "<<second<<" "<<third<<endl;
-        ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);
-        ui->customPlot->replot();
+
     }
     if(second == "c"){
         //qDebug()<<first<<" CCCCC "<<second<<" "<<third<<endl;
         ui->customPlot->graph(1)->addData(first, third + D[1]);
-        ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);
-        ui->customPlot->replot();
+      //  ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);
+      //  ui->customPlot->replot();
     }
     if(second == "g"){
         //qDebug()<<first<<" HHHHH "<<second<<" "<<third<<endl;
         ui->customPlot->graph(2)->addData(first, third + D[2]);
-        ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);
-        ui->customPlot->replot();
+      //  ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);
+      //  ui->customPlot->replot();
     }
     if(second == "p"){
       //  qDebug()<<first<<" PPPP "<<second<<" "<<third<<endl;
         ui->customPlot->graph(3)->addData(first, third + D[3]);
-        ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);
-        ui->customPlot->replot();
+       // ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);
+       // ui->customPlot->replot();
     }
     if(second == "h"){
        // qDebug()<<first<<" HHHH "<<second<<" "<<third<<endl;
         ui->customPlot->graph(4)->addData(first, third + D[4]);
-        ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);
-        ui->customPlot->replot();
+       // ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);
+       // ui->customPlot->replot();
     }
+}
+    ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);
+    ui->customPlot->replot();
 }
 
 
