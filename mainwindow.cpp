@@ -279,7 +279,7 @@ void MainWindow::on_pushButton_clicked()
 
 
 void MainWindow::readData()
-{
+{   //"13213 c 2121/r/n"
     serial_queue += serial->readAll();
     int j;
     long int first;
@@ -392,7 +392,7 @@ void MainWindow::readData()
        // ui->customPlot->replot();
     }
 }
-    ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);
+    ui->customPlot->xAxis->setRange(first, 10000, Qt::AlignRight);//check this first data;;
     ui->customPlot->replot();
 }
 
